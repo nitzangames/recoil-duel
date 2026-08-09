@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="1160" viewBox="0 0 1100 1160">
+  <defs>
+    <linearGradient id="dark" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#213842"/><stop offset="1" stop-color="#071014"/></linearGradient>
+    <linearGradient id="split" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#087a98"/><stop offset=".48" stop-color="#087a98"/><stop offset=".52" stop-color="#b82f36"/><stop offset="1" stop-color="#b82f36"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-opacity=".5"/></filter>
+    <g id="blueGun" filter="url(#shadow)">
+      <path d="M-25 24L14 31-3 102Q-8 116-22 112L-57 97Q-67 92-60 80Z" fill="#071014" stroke="#28b8d6" stroke-width="6"/>
+      <rect x="8" y="-25" width="130" height="50" rx="12" fill="#071014"/><rect x="17" y="-18" width="106" height="36" rx="8" fill="#087a98"/><rect x="31" y="-11" width="76" height="22" rx="5" fill="#28b8d6"/>
+      <circle cx="131" r="10" fill="#071014"/><circle cx="131" r="5" fill="#5e747d"/><rect x="-45" y="-38" width="87" height="76" rx="19" fill="#28b8d6"/><circle cx="-5" r="29" fill="#087a98"/>
+      <path d="M139 0l43-29-15 29 17 27z" fill="#ffc857"/>
+    </g>
+    <g id="redGun" filter="url(#shadow)">
+      <path d="M-25 24L14 31-3 102Q-8 116-22 112L-57 97Q-67 92-60 80Z" fill="#071014" stroke="#ff5e53" stroke-width="6"/>
+      <rect x="8" y="-25" width="130" height="50" rx="12" fill="#071014"/><rect x="17" y="-18" width="106" height="36" rx="8" fill="#b82f36"/><rect x="31" y="-11" width="76" height="22" rx="5" fill="#ff5e53"/>
+      <circle cx="131" r="10" fill="#071014"/><circle cx="131" r="5" fill="#5e747d"/><rect x="-45" y="-38" width="87" height="76" rx="19" fill="#ff5e53"/><circle cx="-5" r="29" fill="#b82f36"/>
+      <path d="M139 0l43-29-15 29 17 27z" fill="#ffc857"/>
+    </g>
+  </defs>
+  <rect width="1100" height="1160" fill="#0b1217"/>
+  <text x="50" y="52" fill="#fffdf5" font-family="Arial,sans-serif" font-size="30" font-weight="800">Recoil Duel — thumbnail directions</text>
+  <text x="50" y="85" fill="#8fa2aa" font-family="Arial,sans-serif" font-size="18">Option D is the current platform thumbnail</text>
+
+  <!-- A: Crossfire -->
+  <g transform="translate(35 115)">
+    <rect width="500" height="500" rx="34" fill="url(#dark)"/>
+    <circle cx="250" cy="255" r="190" fill="#ffc857" opacity=".08"/>
+    <use href="#blueGun" transform="translate(140 255) rotate(16) scale(.88)"/><use href="#redGun" transform="translate(370 265) rotate(196) scale(.88)"/>
+    <text x="250" y="80" text-anchor="middle" fill="#fffdf5" stroke="#071014" stroke-width="7" paint-order="stroke" font-family="Impact,Arial Black,sans-serif" font-size="66">RECOIL</text>
+    <text x="250" y="464" text-anchor="middle" fill="#ffc857" stroke="#071014" stroke-width="7" paint-order="stroke" font-family="Impact,Arial Black,sans-serif" font-size="74">DUEL</text>
+  </g>
+  <text x="35" y="650" fill="#ffc857" font-family="Arial,sans-serif" font-size="24" font-weight="900">A  CROSSFIRE</text><text x="225" y="650" fill="#8fa2aa" font-family="Arial,sans-serif" font-size="18">bold + gameplay-first</text>
+
+  <!-- B: Impact Ring -->
+  <g transform="translate(565 115)">
+    <rect width="500" height="500" rx="34" fill="url(#dark)"/>
+    <circle cx="250" cy="245" r="188" fill="none" stroke="#ffc857" stroke-width="18" opacity=".08"/><circle cx="250" cy="245" r="140" fill="none" stroke="#ffc857" stroke-width="16" opacity=".13"/><circle cx="250" cy="245" r="90" fill="none" stroke="#ffc857" stroke-width="14" opacity=".18"/>
+    <circle cx="388" cy="142" r="35" fill="#ff5e53"/>
+    <use href="#blueGun" transform="translate(230 255) rotate(-38) scale(1.22)"/>
+    <text x="250" y="423" text-anchor="middle" fill="#fffdf5" stroke="#071014" stroke-width="7" paint-order="stroke" font-family="Impact,Arial Black,sans-serif" font-size="63">RECOIL</text>
+    <text x="250" y="484" text-anchor="middle" fill="#ffc857" stroke="#071014" stroke-width="7" paint-order="stroke" font-family="Impact,Arial Black,sans-serif" font-size="70">DUEL</text>
+  </g>
+  <text x="565" y="650" fill="#ffc857" font-family="Arial,sans-serif" font-size="24" font-weight="900">B  IMPACT RING</text><text x="790" y="650" fill="#8fa2aa" font-family="Arial,sans-serif" font-size="18">clean + graphic</text>
+
+  <!-- C: Split Rivals -->
+  <g transform="translate(35 690)">
+    <rect width="500" height="410" rx="34" fill="url(#split)"/>
+    <path d="M220 0h70l-70 410h-70z" fill="#071014" opacity=".38"/>
+    <use href="#blueGun" transform="translate(135 215) rotate(6) scale(.88)"/><use href="#redGun" transform="translate(373 260) rotate(186) scale(.88)"/>
+    <text x="250" y="74" text-anchor="middle" fill="#fffdf5" stroke="#071014" stroke-width="7" paint-order="stroke" font-family="Impact,Arial Black,sans-serif" font-size="62">RECOIL</text>
+    <text x="250" y="385" text-anchor="middle" fill="#ffc857" stroke="#071014" stroke-width="7" paint-order="stroke" font-family="Impact,Arial Black,sans-serif" font-size="70">DUEL</text>
+  </g>
+  <text x="35" y="1135" fill="#ffc857" font-family="Arial,sans-serif" font-size="24" font-weight="900">C  SPLIT RIVALS</text><text x="260" y="1135" fill="#8fa2aa" font-family="Arial,sans-serif" font-size="18">competitive</text>
+
+  <!-- D: Arena View -->
+  <g transform="translate(565 690)">
+    <rect width="500" height="410" rx="34" fill="url(#dark)"/>
+    <rect x="75" y="75" width="350" height="270" rx="16" fill="#eee4d2" stroke="#071014" stroke-width="12"/>
+    <path d="M162 75v270M250 75v270M338 75v270M75 142h350M75 210h350M75 278h350" stroke="#10171d" stroke-width="2" opacity=".12"/>
+    <use href="#blueGun" transform="translate(170 210) rotate(28) scale(.58)"/><use href="#redGun" transform="translate(350 245) rotate(208) scale(.58)"/>
+    <text x="250" y="62" text-anchor="middle" fill="#fffdf5" stroke="#071014" stroke-width="7" paint-order="stroke" font-family="Impact,Arial Black,sans-serif" font-size="58">RECOIL</text>
+    <text x="250" y="394" text-anchor="middle" fill="#ffc857" stroke="#071014" stroke-width="7" paint-order="stroke" font-family="Impact,Arial Black,sans-serif" font-size="66">DUEL</text>
+  </g>
+  <text x="565" y="1135" fill="#ffc857" font-family="Arial,sans-serif" font-size="24" font-weight="900">D  ARENA VIEW</text><text x="790" y="1135" fill="#8fa2aa" font-family="Arial,sans-serif" font-size="18">shows the room</text>
+</svg>

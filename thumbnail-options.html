@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Recoil Duel — Thumbnail Options</title>
+  <style>
+    *{box-sizing:border-box} body{margin:0;background:#0b1217;color:#fffdf5;font-family:system-ui,sans-serif;padding:38px}
+    h1{margin:0 0 8px;font-size:32px}p{margin:0 0 28px;color:#8fa2aa}.grid{display:grid;grid-template-columns:repeat(2,minmax(300px,512px));gap:30px}
+    figure{margin:0;background:#17242c;border:1px solid #30434c;border-radius:22px;padding:14px}canvas{width:100%;height:auto;border-radius:14px;display:block}
+    figcaption{padding:13px 3px 2px;font-weight:800}.tag{color:#ffc857;font-size:13px;margin-right:8px}.note{color:#8fa2aa;font-size:14px;font-weight:500}
+    @media(max-width:760px){body{padding:18px}.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <h1>Recoil Duel — thumbnail directions</h1>
+  <p>Four 512×512 platform-ready compositions. Option D is the current default.</p>
+  <div class="grid">
+    <figure><canvas id="a" width="512" height="512"></canvas><figcaption><span class="tag">A</span>Crossfire <span class="note">— bold, readable, gameplay-first</span></figcaption></figure>
+    <figure><canvas id="b" width="512" height="512"></canvas><figcaption><span class="tag">B</span>Impact Ring <span class="note">— graphic, clean, modern</span></figcaption></figure>
+    <figure><canvas id="c" width="512" height="512"></canvas><figcaption><span class="tag">C</span>Split Rivals <span class="note">— competitive, character-led</span></figcaption></figure>
+    <figure><canvas id="d" width="512" height="512"></canvas><figcaption><span class="tag">D</span>Arena View <span class="note">— shows the square-room hook</span></figcaption></figure>
+  </div>
+  <script>
+    const C={ink:'#071014',ink2:'#17242c',blue:'#28b8d6',blueD:'#087a98',red:'#ff5e53',redD:'#b82f36',gold:'#ffc857',white:'#fffdf5',paper:'#eee4d2'};
+    function bg(x,split=false){const g=x.createLinearGradient(0,0,512,512);g.addColorStop(0,split?C.blueD:'#213842');g.addColorStop(1,split?C.redD:C.ink);x.fillStyle=g;x.fillRect(0,0,512,512)}
+    function gun(x,px,py,a,col,dark,s=1){x.save();x.translate(px,py);x.rotate(a);x.scale(s,s);x.shadowColor='#0009';x.shadowBlur=14;x.shadowOffsetY=8;x.fillStyle=C.ink;x.beginPath();x.moveTo(-25,24);x.lineTo(14,31);x.lineTo(-3,102);x.quadraticCurveTo(-8,116,-22,112);x.lineTo(-57,97);x.quadraticCurveTo(-67,92,-60,80);x.closePath();x.fill();x.strokeStyle=col;x.lineWidth=6;x.stroke();x.fillStyle=C.ink;x.beginPath();x.roundRect(8,-25,130,50,12);x.fill();x.fillStyle=dark;x.beginPath();x.roundRect(17,-18,106,36,8);x.fill();x.fillStyle=col;x.beginPath();x.roundRect(31,-11,76,22,5);x.fill();x.fillStyle='#5e747d';x.beginPath();x.arc(131,0,7,0,Math.PI*2);x.fill();x.fillStyle=col;x.beginPath();x.roundRect(-45,-38,87,76,19);x.fill();x.fillStyle=dark;x.beginPath();x.arc(-5,0,29,0,Math.PI*2);x.fill();x.shadowColor='transparent';x.fillStyle=C.gold;x.beginPath();x.moveTo(139,0);x.lineTo(182,-29);x.lineTo(167,0);x.lineTo(184,27);x.closePath();x.fill();x.restore()}
+    function title(x,top=false){x.textAlign='center';x.lineJoin='round';x.font='900 68px Impact,Arial Black,sans-serif';x.strokeStyle=C.ink;x.lineWidth=10;x.fillStyle=C.white;x.strokeText('RECOIL',256,top?76:420);x.fillText('RECOIL',256,top?76:420);x.font='900 76px Impact,Arial Black,sans-serif';x.fillStyle=C.gold;x.strokeText('DUEL',256,top?470:485);x.fillText('DUEL',256,top?470:485)}
+    {const x=a.getContext('2d');bg(x);x.fillStyle='#ffc85718';x.beginPath();x.arc(256,256,210,0,Math.PI*2);x.fill();gun(x,137,250,.28,C.blue,C.blueD,1);gun(x,377,263,Math.PI+.28,C.red,C.redD,1);title(x,true)}
+    {const x=b.getContext('2d');bg(x);for(let r=190;r>40;r-=38){x.strokeStyle=`rgba(255,200,87,${.05+(190-r)/900})`;x.lineWidth=15;x.beginPath();x.arc(256,250,r,0,Math.PI*2);x.stroke()}gun(x,256,250,-.65,C.blue,C.blueD,1.35);x.fillStyle=C.red;x.beginPath();x.arc(390,147,36,0,Math.PI*2);x.fill();title(x)}
+    {const x=c.getContext('2d');bg(x,true);x.fillStyle='#07101455';x.beginPath();x.moveTo(220,0);x.lineTo(292,0);x.lineTo(220,512);x.lineTo(148,512);x.closePath();x.fill();gun(x,158,235,.08,C.blue,C.blueD,1.12);gun(x,364,280,Math.PI+.08,C.red,C.redD,1.12);title(x,true)}
+    {const x=d.getContext('2d');bg(x);x.fillStyle=C.paper;x.beginPath();x.roundRect(52,96,408,340,18);x.fill();x.strokeStyle=C.ink;x.lineWidth=13;x.stroke();x.strokeStyle='#10171d18';x.lineWidth=2;for(let q=1;q<5;q++){x.beginPath();x.moveTo(52+q*81.6,96);x.lineTo(52+q*81.6,436);x.stroke();x.beginPath();x.moveTo(52,96+q*68);x.lineTo(460,96+q*68);x.stroke()}gun(x,169,246,.5,C.blue,C.blueD,.68);gun(x,354,300,Math.PI+.5,C.red,C.redD,.68);title(x,true)}
+  </script>
+</body>
+</html>

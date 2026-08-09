@@ -1,0 +1,14 @@
+.git/*
+.git/**
+.gitignore
+.zipignore
+README.md
+package.json
+package-lock.json
+tests/*
+tests/**
+thumbnail-options.html
+thumbnail-options.svg
+thumbnail-options.png
+thumbnail.svg
+*.log
