@@ -22,12 +22,21 @@ export function startMatch(gd, b, mode, roundId = gd.roundId + 1) {
   for (let i = 0; i < b.maxBullets; i++) gd.bulletDead[i] = i;
 
   const cy = b.arenaTop + b.arenaSize * 0.5;
-  gd.gunX[0] = b.arenaLeft + b.arenaSize * 0.27;
-  gd.gunY[0] = cy - 100;
-  gd.gunX[1] = b.arenaLeft + b.arenaSize * 0.73;
-  gd.gunY[1] = cy + 100;
-  gd.gunAngle[0] = 0;
-  gd.gunAngle[1] = Math.PI;
+  if (mode === MODE.LOCAL) {
+    gd.gunX[0] = b.arenaLeft + b.arenaSize * 0.38;
+    gd.gunY[0] = cy + b.arenaSize * 0.22;
+    gd.gunX[1] = b.arenaLeft + b.arenaSize * 0.62;
+    gd.gunY[1] = cy - b.arenaSize * 0.22;
+    gd.gunAngle[0] = -Math.PI * 0.5;
+    gd.gunAngle[1] = Math.PI * 0.5;
+  } else {
+    gd.gunX[0] = b.arenaLeft + b.arenaSize * 0.27;
+    gd.gunY[0] = cy - 100;
+    gd.gunX[1] = b.arenaLeft + b.arenaSize * 0.73;
+    gd.gunY[1] = cy + 100;
+    gd.gunAngle[0] = 0;
+    gd.gunAngle[1] = Math.PI;
+  }
 
   for (let i = 0; i < b.gunCount; i++) {
     gd.gunVX[i] = 0;

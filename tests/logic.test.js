@@ -4,6 +4,7 @@ import { balance, MODE, PHASE } from '../src/balance.js';
 import { allocateGameData } from '../src/game-data.js';
 import * as Logic from '../src/logic.js';
 import { createSnapshotPacket, fillSnapshotPacket } from '../src/net.js';
+import { playerForTapY } from '../src/board.js';
 
 function makePlaying(mode = MODE.BOT) {
   const gd = allocateGameData(balance, 12345);
@@ -79,6 +80,24 @@ test('bot fires when its rotating barrel lines up with the player', () => {
   Logic.tick(gd, balance, 1 / 60);
   assert.equal(gd.gunAmmo[1], balance.magazineSize - 1);
   assert.equal(gd.bulletCount, 1);
+});
+
+test('local mode accepts simultaneous fire intents from both players', () => {
+  const gd = makePlaying(MODE.LOCAL);
+  assert.ok(gd.gunY[1] < gd.gunY[0], 'P2 starts at the top and P1 at the bottom');
+  Logic.queueFire(gd, 0);
+  Logic.queueFire(gd, 1);
+  Logic.tick(gd, balance, 1 / 60);
+  assert.equal(gd.gunAmmo[0], balance.magazineSize - 1);
+  assert.equal(gd.gunAmmo[1], balance.magazineSize - 1);
+  assert.equal(gd.bulletCount, 2);
+});
+
+test('same-screen input maps top to P2 and bottom to P1', () => {
+  assert.equal(playerForTapY(0, balance), 1);
+  assert.equal(playerForTapY(balance.gameHeight / 2 - 1, balance), 1);
+  assert.equal(playerForTapY(balance.gameHeight / 2, balance), 0);
+  assert.equal(playerForTapY(balance.gameHeight - 1, balance), 0);
 });
 
 test('snapshot transport copies host state into replica targets and bullet pools', () => {

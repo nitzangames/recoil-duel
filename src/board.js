@@ -10,6 +10,7 @@ const COLOR = Object.freeze({
 
 const PLAYER_COLOR = [COLOR.blue, COLOR.coral];
 const PLAYER_DARK = [COLOR.blueDark, COLOR.coralDark];
+const LOCAL_WIN_TEXT = ['P1 WINS!', 'P2 WINS!'];
 
 export function createBoard(canvas, b, actions) {
   const ctx = canvas.getContext('2d', { alpha: false });
@@ -46,18 +47,23 @@ export function createBoard(canvas, b, actions) {
     const x = (event.clientX - board.rect.left) * board.scaleX;
     const y = (event.clientY - board.rect.top) * board.scaleY;
     if (board.screen === SCREEN.MENU) {
-      if (x >= 125 && x <= 955 && y >= 1240 && y <= 1395) actions.startBot();
-      else if (x >= 125 && x <= 955 && y >= 1430 && y <= 1585) actions.startOnline();
+      if (x >= 125 && x <= 955 && y >= 1170 && y <= 1305) actions.startBot();
+      else if (x >= 125 && x <= 955 && y >= 1330 && y <= 1465) actions.startLocal();
+      else if (x >= 125 && x <= 955 && y >= 1490 && y <= 1625) actions.startOnline();
     } else if (x < 190 && y < 190) {
       actions.exitMatch();
     } else if (actions.isGameOver()) {
       if (x >= 155 && x <= 925 && y >= 1510 && y <= 1655) actions.rematch();
       else if (x >= 155 && x <= 925 && y >= 1680 && y <= 1815) actions.exitMatch();
     } else {
-      actions.fire();
+      actions.fire(board.mode === MODE.LOCAL ? playerForTapY(y, b) : board.localPlayer);
     }
   });
   return board;
+}
+
+export function playerForTapY(y, b) {
+  return y < b.gameHeight * 0.5 ? 1 : 0;
 }
 
 export function setBoardScreen(board, screen, mode = board.mode, localPlayer = board.localPlayer) {
@@ -245,21 +251,23 @@ function drawMenu(board, b) {
   ctx.font = '900 28px system-ui, sans-serif';
   ctx.fillText('3 HITS  •  5 SHOTS  •  1 WINNER', 540, 1081);
 
-  drawButton(ctx, 125, 1240, 830, 155, COLOR.blueDark, 'PLAY VS BOT', 'Instant match • works offline');
-  drawButton(ctx, 125, 1430, 830, 155, COLOR.coralDark, 'ONLINE DUEL', 'Create, join, or quick match');
+  drawButton(ctx, 125, 1170, 830, 135, COLOR.blueDark, 'PLAY VS BOT', 'Instant match • works offline');
+  drawButton(ctx, 125, 1330, 830, 135, '#7b4bb7', '2 PLAYERS — SAME SCREEN', 'P2 taps top • P1 taps bottom');
+  drawButton(ctx, 125, 1490, 830, 135, COLOR.coralDark, 'ONLINE DUEL', 'Create, join, or quick match');
 
   ctx.fillStyle = COLOR.muted;
   ctx.font = '700 24px system-ui, sans-serif';
-  ctx.fillText('Your gun spins constantly. Tap to fire.', 540, 1690);
-  ctx.fillText('Every shot kicks you backward — use the recoil.', 540, 1730);
+  ctx.fillText('Your gun spins constantly. Tap to fire.', 540, 1715);
+  ctx.fillText('Every shot kicks you backward — use the recoil.', 540, 1755);
   ctx.globalAlpha = 0.45;
   ctx.font = '700 19px system-ui, sans-serif';
-  ctx.fillText('v0.1', 540, 1850);
+  ctx.fillText('v0.2', 540, 1850);
   ctx.globalAlpha = 1;
   drawToast(board);
 }
 
 function playerTitle(board, index) {
+  if (board.mode === MODE.LOCAL) return index === 0 ? 'P1' : 'P2';
   if (index === board.localPlayer) return 'YOU';
   if (board.mode === MODE.BOT) return 'BOT';
   return 'RIVAL';
@@ -282,10 +290,10 @@ function drawPlayerHud(board, gd, b, index, x) {
   const ctx = board.ctx;
   const color = PLAYER_COLOR[index];
   const dark = PLAYER_DARK[index];
-  ctx.fillStyle = index === board.localPlayer ? color : COLOR.ink2;
+  ctx.fillStyle = board.mode === MODE.LOCAL || index === board.localPlayer ? color : COLOR.ink2;
   roundedRect(ctx, x, 190, 390, 165, 35);
   ctx.fill();
-  if (index !== board.localPlayer) {
+  if (board.mode !== MODE.LOCAL && index !== board.localPlayer) {
     ctx.strokeStyle = color; ctx.lineWidth = 5; ctx.stroke();
   }
   ctx.fillStyle = COLOR.white;
@@ -391,6 +399,42 @@ function drawFireControl(board, gd, b) {
   ctx.fillText('SHOT DIRECTION FOLLOWS THE SPIN', 540, 1820);
 }
 
+function drawLocalControls(board, gd, b) {
+  const ctx = board.ctx;
+  const topReloading = gd.gunAmmo[1] === 0;
+  const bottomReloading = gd.gunAmmo[0] === 0;
+
+  // Edge rails make the top/bottom ownership readable without covering the arena.
+  ctx.fillStyle = 'rgba(255,94,83,.62)';
+  ctx.fillRect(0, 170, 12, 790); ctx.fillRect(1068, 170, 12, 790);
+  ctx.fillStyle = 'rgba(40,184,214,.62)';
+  ctx.fillRect(0, 960, 12, 950); ctx.fillRect(1068, 960, 12, 950);
+
+  ctx.save();
+  ctx.translate(540, 389);
+  ctx.rotate(Math.PI);
+  ctx.fillStyle = topReloading ? COLOR.ink2 : COLOR.coralDark;
+  roundedRect(ctx, -265, -31, 530, 62, 30); ctx.fill();
+  ctx.fillStyle = COLOR.white; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = '900 25px system-ui, sans-serif';
+  ctx.fillText(topReloading ? 'P2 • RELOADING' : 'P2 • TAP TOP HALF TO FIRE', 0, 1);
+  ctx.restore();
+
+  ctx.fillStyle = bottomReloading ? COLOR.ink2 : COLOR.blueDark;
+  roundedRect(ctx, 275, 1430, 530, 72, 34); ctx.fill();
+  ctx.fillStyle = COLOR.white; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = '900 25px system-ui, sans-serif';
+  ctx.fillText(bottomReloading ? 'P1 • RELOADING' : 'P1 • TAP BOTTOM HALF TO FIRE', 540, 1467);
+
+  ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 4; ctx.setLineDash([12, 14]);
+  ctx.beginPath(); ctx.moveTo(24, b.gameHeight * 0.5); ctx.lineTo(1056, b.gameHeight * 0.5); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = COLOR.muted; ctx.font = '700 22px system-ui, sans-serif';
+  ctx.fillText('MULTI-TOUCH ENABLED • FIRST TO 3 HITS', 540, 1760);
+  ctx.fillText('SHOT DIRECTION FOLLOWS THE SPIN', 540, 1810);
+}
+
 function drawBack(ctx) {
   ctx.fillStyle = 'rgba(255,255,255,.09)'; ctx.beginPath(); ctx.arc(104, 104, 55, 0, TAU); ctx.fill();
   ctx.strokeStyle = COLOR.white; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -404,12 +448,12 @@ function drawEnd(board, gd) {
   ctx.fillStyle = won ? COLOR.gold : COLOR.white;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = '1000 128px Impact, system-ui, sans-serif';
-  ctx.fillText(won ? 'YOU WIN!' : 'RIVAL WINS', 540, 730);
+  ctx.fillText(board.mode === MODE.LOCAL ? LOCAL_WIN_TEXT[gd.winner] : (won ? 'YOU WIN!' : 'RIVAL WINS'), 540, 730);
   ctx.fillStyle = COLOR.muted; ctx.font = '800 28px system-ui, sans-serif';
-  ctx.fillText(won ? 'Three clean hits. Nice shooting.' : 'Recoil, reload, run it back.', 540, 835);
+  ctx.fillText(board.mode === MODE.LOCAL ? 'Three clean hits. Pass the rematch.' : (won ? 'Three clean hits. Nice shooting.' : 'Recoil, reload, run it back.'), 540, 835);
   drawGun(ctx, 540, 1080, gd.gunAngle[gd.winner], PLAYER_COLOR[gd.winner], PLAYER_DARK[gd.winner], 0.08, 0, 1.45);
 
-  drawButton(ctx, 155, 1510, 770, 145, COLOR.coralDark, board.mode === MODE.BOT ? 'REMATCH' : 'REMATCH', board.mode === MODE.BOT ? 'Instant restart' : 'Waiting for both players');
+  drawButton(ctx, 155, 1510, 770, 145, COLOR.coralDark, 'REMATCH', board.mode === MODE.BOT || board.mode === MODE.LOCAL ? 'Instant restart' : 'Waiting for both players');
   drawButton(ctx, 155, 1680, 770, 135, COLOR.ink2, 'EXIT', 'Back to mode select');
 }
 
@@ -419,7 +463,7 @@ function drawMatch(board, gd, b) {
   drawBack(ctx);
   ctx.fillStyle = COLOR.gold; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = '900 24px system-ui, sans-serif';
-  ctx.fillText(board.mode === MODE.BOT ? 'BOT DUEL' : 'ONLINE DUEL', 540, 74);
+  ctx.fillText(board.mode === MODE.BOT ? 'BOT DUEL' : (board.mode === MODE.LOCAL ? 'LOCAL DUEL' : 'ONLINE DUEL'), 540, 74);
   ctx.fillStyle = COLOR.muted; ctx.font = '700 19px system-ui, sans-serif';
   ctx.fillText('FIRST TO 3 HITS', 540, 108);
   updateHudCache(board, gd, b);
@@ -427,7 +471,8 @@ function drawMatch(board, gd, b) {
   drawPlayerHud(board, gd, b, 1, 620);
   drawArena(board, gd, b);
   drawCountdown(ctx, gd);
-  drawFireControl(board, gd, b);
+  if (board.mode === MODE.LOCAL) drawLocalControls(board, gd, b);
+  else drawFireControl(board, gd, b);
   if (gd.phase === PHASE.OVER) drawEnd(board, gd);
   drawToast(board);
 }

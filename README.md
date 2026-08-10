@@ -1,6 +1,7 @@
 # Recoil Duel
 
-A one-tap, two-player arena game for nitzan.games. Each gun rotates continuously;
+A one-tap arena game for nitzan.games. Play against a bot, online, or face-to-face
+on one screen. Each gun rotates continuously;
 firing launches a bullet and kicks the gun backward. Five shots trigger a timed
 reload, and the first player to land three hits wins.
 
@@ -34,6 +35,9 @@ The simulation follows data-oriented design:
 Online matches are host-authoritative. The host simulates both players and sends
 24 Hz snapshots; the guest interpolates replica state and sends compact fire
 intents. Rematches begin once both players opt in.
+
+In local two-player mode, Player 2 taps anywhere in the top half and Player 1 taps
+anywhere in the bottom half. Independent pointer events allow simultaneous shots.
 
 `thumbnail-options.html` presents four visual directions. Option D is exported as
 the current 512×512 `thumbnail.png`.

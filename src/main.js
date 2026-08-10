@@ -32,6 +32,14 @@ function startBot() {
   setBoardScreen(board, SCREEN.MATCH, MODE.BOT, 0);
 }
 
+function startLocal() {
+  leaveNetwork(false);
+  gd.localPlayer = 0;
+  Logic.startMatch(gd, balance, MODE.LOCAL);
+  resetHudCache();
+  setBoardScreen(board, SCREEN.MATCH, MODE.LOCAL, 0);
+}
+
 function attachOnlineGame() {
   try {
     net = attachPlatformNet();
@@ -85,7 +93,7 @@ function startOnline() {
   });
 }
 
-function fire() {
+function fire(playerIndex = gd.localPlayer) {
   if (gd.phase !== PHASE.PLAYING) return;
   if (gd.mode === MODE.ONLINE_GUEST) {
     Logic.applyReplicaShotFeedback(gd, gd.localPlayer, balance);
@@ -93,7 +101,7 @@ function fire() {
     playFeedback(board, gd);
     net?.sendFire();
   } else {
-    Logic.queueFire(gd, gd.localPlayer);
+    Logic.queueFire(gd, playerIndex);
   }
 }
 
@@ -109,8 +117,8 @@ function tryStartOnlineRematch() {
 
 function rematch() {
   if (gd.phase !== PHASE.OVER) return;
-  if (gd.mode === MODE.BOT) {
-    Logic.startMatch(gd, balance, MODE.BOT);
+  if (gd.mode === MODE.BOT || gd.mode === MODE.LOCAL) {
+    Logic.startMatch(gd, balance, gd.mode);
     resetHudCache();
   } else {
     Logic.setRematchReady(gd, gd.localPlayer);
@@ -136,6 +144,7 @@ function exitMatch() {
 
 const actions = {
   startBot,
+  startLocal,
   startOnline,
   fire,
   rematch,

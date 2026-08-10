@@ -10,6 +10,7 @@ export const MODE = Object.freeze({
   BOT: 0,
   ONLINE_HOST: 1,
   ONLINE_GUEST: 2,
+  LOCAL: 3,
 });
 
 export const balance = Object.freeze({

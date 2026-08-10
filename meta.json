@@ -1,7 +1,7 @@
 {
   "slug": "recoil-duel",
   "title": "Recoil Duel",
-  "description": "A one-tap showdown where every shot sends your spinning gun flying. Land three hits before your rival does.",
+  "description": "A one-tap showdown where every shot sends your spinning gun flying. Battle a bot, share one screen, or duel online.",
   "tags": ["arcade", "action", "multiplayer"],
   "author": "Nitzan Wilnai",
   "thumbnail": "thumbnail.png"
