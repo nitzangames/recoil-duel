@@ -44,6 +44,7 @@ function resetHudCache() {
   board.cachedAmmo[1] = -1;
   board.cachedHits[0] = -1;
   board.cachedHits[1] = -1;
+  board.cachedTitleMode = -1;
 }
 
 function startBot(diff = currentDifficulty) {

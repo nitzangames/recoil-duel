@@ -21,6 +21,7 @@ export function createBoard(canvas, b, actions) {
     toast: '', toastTime: 0, audio: null, wallSoundClock: 0,
     cachedAmmo: [-1, -1], cachedHits: [-1, -1],
     ammoText: ['', ''], scoreText: ['', ''],
+    titleText: ['', ''], cachedTitleMode: -1, cachedTitleLocalPlayer: -1, cachedTitleDifficulty: -1,
     menuGradient: ctx.createLinearGradient(0, 0, 1080, 1920),
     arenaGradient: ctx.createLinearGradient(70, 430, 1010, 1370),
     fireGradient: ctx.createRadialGradient(500, 1580, 10, 540, 1640, 180),
@@ -76,10 +77,12 @@ export function setBoardScreen(board, screen, mode = board.mode, localPlayer = b
   board.screen = screen;
   board.mode = mode;
   board.localPlayer = localPlayer;
+  board.cachedTitleMode = -1;
 }
 
 export function setBoardDifficulty(board, diff) {
   board.difficulty = diff;
+  board.cachedTitleMode = -1;
 }
 
 export function showToast(board, message, seconds = 2.4) {
@@ -318,6 +321,13 @@ function playerTitle(board, index, full = true) {
 }
 
 function updateHudCache(board, gd, b) {
+  if (board.mode !== board.cachedTitleMode || board.localPlayer !== board.cachedTitleLocalPlayer || board.difficulty !== board.cachedTitleDifficulty) {
+    board.cachedTitleMode = board.mode;
+    board.cachedTitleLocalPlayer = board.localPlayer;
+    board.cachedTitleDifficulty = board.difficulty;
+    board.titleText[0] = playerTitle(board, 0);
+    board.titleText[1] = playerTitle(board, 1);
+  }
   for (let i = 0; i < b.gunCount; i++) {
     if (board.cachedAmmo[i] !== gd.gunAmmo[i]) {
       board.cachedAmmo[i] = gd.gunAmmo[i];
@@ -343,7 +353,7 @@ function drawPlayerHud(board, gd, b, index, x) {
   ctx.fillStyle = COLOR.white;
   ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   ctx.font = '900 31px system-ui, sans-serif';
-  ctx.fillText(playerTitle(board, index), x + 25, 232);
+  ctx.fillText(board.titleText[index], x + 25, 232);
   ctx.globalAlpha = 0.72;
   ctx.font = '700 20px system-ui, sans-serif';
   ctx.fillText(board.scoreText[index], x + 25, 270);
