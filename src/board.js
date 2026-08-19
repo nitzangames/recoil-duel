@@ -11,6 +11,8 @@ const COLOR = Object.freeze({
 const PLAYER_COLOR = [COLOR.blue, COLOR.coral];
 const PLAYER_DARK = [COLOR.blueDark, COLOR.coralDark];
 const LOCAL_WIN_TEXT = ['P1 WINS!', 'P2 WINS!'];
+const DIFFICULTY_BUTTON_FILL = [COLOR.blueDark, '#7b4bb7', COLOR.coralDark];
+const DIFFICULTY_BUTTON_TOPS = [1170, 1330, 1490];
 
 export function createBoard(canvas, b, actions) {
   const ctx = canvas.getContext('2d', { alpha: false });
@@ -294,14 +296,12 @@ function drawDifficulty(board, b) {
   ctx.font = '800 27px system-ui, sans-serif';
   ctx.fillText('PICK A BOT SKILL LEVEL', 540, 420);
 
-  const fill = [COLOR.blueDark, '#7b4bb7', COLOR.coralDark];
-  const tops = [1170, 1330, 1490];
   for (let i = 0; i < difficulty.count; i++) {
-    drawButton(ctx, 125, tops[i], 830, 135, fill[i], difficulty.name[i], difficulty.blurb[i]);
+    drawButton(ctx, 125, DIFFICULTY_BUTTON_TOPS[i], 830, 135, DIFFICULTY_BUTTON_FILL[i], difficulty.name[i], difficulty.blurb[i]);
     if (board.difficulty === i) {
       ctx.strokeStyle = COLOR.gold;
       ctx.lineWidth = 6;
-      roundedRect(ctx, 125, tops[i], 830, 135, 34);
+      roundedRect(ctx, 125, DIFFICULTY_BUTTON_TOPS[i], 830, 135, 34);
       ctx.stroke();
     }
   }
@@ -352,7 +352,8 @@ function drawPlayerHud(board, gd, b, index, x) {
   }
   ctx.fillStyle = COLOR.white;
   ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  ctx.font = '900 31px system-ui, sans-serif';
+  const isBotDifficultyTitle = board.mode === MODE.BOT && index !== board.localPlayer;
+  ctx.font = isBotDifficultyTitle ? '900 26px system-ui, sans-serif' : '900 31px system-ui, sans-serif';
   ctx.fillText(board.titleText[index], x + 25, 232);
   ctx.globalAlpha = 0.72;
   ctx.font = '700 20px system-ui, sans-serif';

@@ -107,7 +107,7 @@ test('a rematch without an explicit diff preserves the previously selected diffi
 });
 
 test('bot difficulty controls whether a borderline aim error results in a shot', () => {
-  const aimError = 0.18;
+  const aimError = 0.12; // between HARD's 0.05 and EASY's 0.17 aimTolerance
   for (const [diff, shouldFire] of [[DIFFICULTY.EASY, true], [DIFFICULTY.HARD, false]]) {
     const gd = allocateGameData(balance, 12345);
     Logic.startMatch(gd, balance, MODE.BOT, 1, diff);

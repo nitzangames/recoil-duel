@@ -47,9 +47,11 @@ function resetHudCache() {
   board.cachedTitleMode = -1;
 }
 
-function startBot(diff = currentDifficulty) {
+function startBot(diff) {
+  const explicitDiff = diff !== undefined;
+  if (!explicitDiff) diff = currentDifficulty;
   currentDifficulty = diff;
-  saveDifficulty(diff);
+  if (explicitDiff) saveDifficulty(diff);
   leaveNetwork(false);
   gd.localPlayer = 0;
   Logic.startMatch(gd, balance, MODE.BOT, undefined, diff);

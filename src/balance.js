@@ -23,7 +23,7 @@ export const difficulty = Object.freeze({
     'A fair duel • leads your shots',
     'Tight aim • fires the instant it can',
   ],
-  aimTolerance: Float32Array.of(0.26, 0.105, 0.05),
+  aimTolerance: Float32Array.of(0.17, 0.105, 0.05),
   thinkMin: Float32Array.of(0.55, 0.22, 0.1),
   thinkRange: Float32Array.of(0.55, 0.32, 0.14),
   leadTime: Float32Array.of(0, 0.12, 0.2),
