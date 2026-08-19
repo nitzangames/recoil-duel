@@ -1,6 +1,6 @@
-import { MODE, PHASE, TAU } from './balance.js';
+import { difficulty, DIFFICULTY, MODE, PHASE, TAU } from './balance.js';
 
-export const SCREEN = Object.freeze({ MENU: 0, MATCH: 1 });
+export const SCREEN = Object.freeze({ MENU: 0, DIFFICULTY: 1, MATCH: 2 });
 
 const COLOR = Object.freeze({
   ink: '#10171d', ink2: '#17242c', paper: '#f2eadb', paperDark: '#d6c7ad',
@@ -16,6 +16,7 @@ export function createBoard(canvas, b, actions) {
   const ctx = canvas.getContext('2d', { alpha: false });
   const board = {
     canvas, ctx, actions, screen: SCREEN.MENU, localPlayer: 0, mode: MODE.BOT,
+    difficulty: DIFFICULTY.NORMAL,
     rect: canvas.getBoundingClientRect(), scaleX: 1, scaleY: 1,
     toast: '', toastTime: 0, audio: null, wallSoundClock: 0,
     cachedAmmo: [-1, -1], cachedHits: [-1, -1],
@@ -47,9 +48,14 @@ export function createBoard(canvas, b, actions) {
     const x = (event.clientX - board.rect.left) * board.scaleX;
     const y = (event.clientY - board.rect.top) * board.scaleY;
     if (board.screen === SCREEN.MENU) {
-      if (x >= 125 && x <= 955 && y >= 1170 && y <= 1305) actions.startBot();
+      if (x >= 125 && x <= 955 && y >= 1170 && y <= 1305) actions.openDifficulty();
       else if (x >= 125 && x <= 955 && y >= 1330 && y <= 1465) actions.startLocal();
       else if (x >= 125 && x <= 955 && y >= 1490 && y <= 1625) actions.startOnline();
+    } else if (board.screen === SCREEN.DIFFICULTY) {
+      if (x < 190 && y < 190) actions.exitToMenu();
+      else if (x >= 125 && x <= 955 && y >= 1170 && y <= 1305) actions.startBot(0);
+      else if (x >= 125 && x <= 955 && y >= 1330 && y <= 1465) actions.startBot(1);
+      else if (x >= 125 && x <= 955 && y >= 1490 && y <= 1625) actions.startBot(2);
     } else if (x < 190 && y < 190) {
       actions.exitMatch();
     } else if (actions.isGameOver()) {
@@ -70,6 +76,10 @@ export function setBoardScreen(board, screen, mode = board.mode, localPlayer = b
   board.screen = screen;
   board.mode = mode;
   board.localPlayer = localPlayer;
+}
+
+export function setBoardDifficulty(board, diff) {
+  board.difficulty = diff;
 }
 
 export function showToast(board, message, seconds = 2.4) {
@@ -266,10 +276,44 @@ function drawMenu(board, b) {
   drawToast(board);
 }
 
-function playerTitle(board, index) {
+function drawDifficulty(board, b) {
+  const ctx = board.ctx;
+  drawBackground(board, b);
+  drawBrand(ctx);
+  drawBack(ctx);
+
+  ctx.fillStyle = COLOR.gold;
+  ctx.font = '1000 70px Impact, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('CHOOSE YOUR RIVAL', 540, 340);
+  ctx.fillStyle = COLOR.muted;
+  ctx.font = '800 27px system-ui, sans-serif';
+  ctx.fillText('PICK A BOT SKILL LEVEL', 540, 420);
+
+  const fill = [COLOR.blueDark, '#7b4bb7', COLOR.coralDark];
+  const tops = [1170, 1330, 1490];
+  for (let i = 0; i < difficulty.count; i++) {
+    drawButton(ctx, 125, tops[i], 830, 135, fill[i], difficulty.name[i], difficulty.blurb[i]);
+    if (board.difficulty === i) {
+      ctx.strokeStyle = COLOR.gold;
+      ctx.lineWidth = 6;
+      roundedRect(ctx, 125, tops[i], 830, 135, 34);
+      ctx.stroke();
+    }
+  }
+
+  ctx.fillStyle = COLOR.muted;
+  ctx.font = '700 24px system-ui, sans-serif';
+  ctx.fillText('Tap a level to jump straight into the duel.', 540, 1715);
+  ctx.fillText('Your pick is remembered for next time.', 540, 1755);
+  drawToast(board);
+}
+
+function playerTitle(board, index, full = true) {
   if (board.mode === MODE.LOCAL) return index === 0 ? 'P1' : 'P2';
   if (index === board.localPlayer) return 'YOU';
-  if (board.mode === MODE.BOT) return 'BOT';
+  if (board.mode === MODE.BOT) return full ? `BOT • ${difficulty.name[board.difficulty]}` : 'BOT';
   return 'RIVAL';
 }
 
@@ -362,7 +406,7 @@ function drawArena(board, gd, b) {
     roundedRect(ctx, gd.gunX[i] - 50, gd.gunY[i] + 73, 100, 30, 15); ctx.fill();
     ctx.fillStyle = COLOR.white;
     ctx.font = '900 17px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(playerTitle(board, i), gd.gunX[i], gd.gunY[i] + 88);
+    ctx.fillText(playerTitle(board, i, false), gd.gunX[i], gd.gunY[i] + 88);
   }
   ctx.restore();
 }
@@ -488,6 +532,7 @@ function drawToast(board) {
 
 export function renderBoard(board, gd, b) {
   if (board.screen === SCREEN.MENU) drawMenu(board, b);
+  else if (board.screen === SCREEN.DIFFICULTY) drawDifficulty(board, b);
   else drawMatch(board, gd, b);
 }
 
