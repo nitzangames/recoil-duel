@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { balance, MODE, PHASE } from '../src/balance.js';
+import { balance, difficulty, DIFFICULTY, MODE, PHASE } from '../src/balance.js';
 import { allocateGameData } from '../src/game-data.js';
 import * as Logic from '../src/logic.js';
 import { createSnapshotPacket, fillSnapshotPacket } from '../src/net.js';
@@ -80,6 +80,52 @@ test('bot fires when its rotating barrel lines up with the player', () => {
   Logic.tick(gd, balance, 1 / 60);
   assert.equal(gd.gunAmmo[1], balance.magazineSize - 1);
   assert.equal(gd.bulletCount, 1);
+});
+
+test('startMatch defaults difficulty to NORMAL and stores an explicit diff', () => {
+  const gd = allocateGameData(balance, 1);
+  Logic.startMatch(gd, balance, MODE.BOT, 1);
+  assert.equal(gd.difficulty, DIFFICULTY.NORMAL);
+  Logic.startMatch(gd, balance, MODE.BOT, 2, DIFFICULTY.HARD);
+  assert.equal(gd.difficulty, DIFFICULTY.HARD);
+});
+
+test('NORMAL difficulty reproduces the pre-change bot tuning constants', () => {
+  assert.ok(Math.abs(difficulty.aimTolerance[DIFFICULTY.NORMAL] - 0.105) < 1e-6);
+  assert.ok(Math.abs(difficulty.thinkMin[DIFFICULTY.NORMAL] - 0.22) < 1e-6);
+  assert.ok(Math.abs(difficulty.thinkRange[DIFFICULTY.NORMAL] - 0.32) < 1e-6);
+  assert.ok(Math.abs(difficulty.leadTime[DIFFICULTY.NORMAL] - 0.12) < 1e-6);
+  assert.ok(Math.abs(difficulty.openingThink[DIFFICULTY.NORMAL] - 0.45) < 1e-6);
+});
+
+test('a rematch without an explicit diff preserves the previously selected difficulty', () => {
+  const gd = allocateGameData(balance, 1);
+  Logic.startMatch(gd, balance, MODE.BOT, 1, DIFFICULTY.EASY);
+  assert.equal(gd.difficulty, DIFFICULTY.EASY);
+  Logic.startMatch(gd, balance, MODE.BOT);
+  assert.equal(gd.difficulty, DIFFICULTY.EASY);
+});
+
+test('bot difficulty controls whether a borderline aim error results in a shot', () => {
+  const aimError = 0.12; // between HARD's 0.05 and EASY's 0.17 aimTolerance
+  for (const [diff, shouldFire] of [[DIFFICULTY.EASY, true], [DIFFICULTY.HARD, false]]) {
+    const gd = allocateGameData(balance, 12345);
+    Logic.startMatch(gd, balance, MODE.BOT, 1, diff);
+    gd.phase = PHASE.PLAYING;
+    gd.gunX[0] = 300; gd.gunY[0] = 700; gd.gunVX[0] = 0; gd.gunVY[0] = 0;
+    gd.gunX[1] = 700; gd.gunY[1] = 700; gd.gunVX[1] = 0; gd.gunVY[1] = 0;
+    gd.gunAngle[1] = Math.PI - aimError;
+    gd.botThink[1] = 0;
+    const ammoBefore = gd.gunAmmo[1];
+    Logic.tick(gd, balance, balance.fixedStep);
+    if (shouldFire) {
+      assert.equal(gd.gunAmmo[1], ammoBefore - 1);
+      assert.equal(gd.bulletCount, 1);
+    } else {
+      assert.equal(gd.gunAmmo[1], ammoBefore);
+      assert.equal(gd.bulletCount, 0);
+    }
+  }
 });
 
 test('local mode accepts simultaneous fire intents from both players', () => {

@@ -1,11 +1,12 @@
-import { MODE, PHASE, TAU } from './balance.js';
+import { difficulty, MODE, PHASE, TAU } from './balance.js';
 
 const EPSILON = 0.0001;
 
-export function startMatch(gd, b, mode, roundId = gd.roundId + 1) {
+export function startMatch(gd, b, mode, roundId = gd.roundId + 1, diff = gd.difficulty) {
   gd.phase = PHASE.COUNTDOWN;
   gd.winner = -1;
   gd.mode = mode;
+  gd.difficulty = diff;
   gd.time = 0;
   gd.accumulator = 0;
   gd.countdown = b.countdownTime;
@@ -51,7 +52,7 @@ export function startMatch(gd, b, mode, roundId = gd.roundId + 1) {
     gd.gunShotSequence[i] = 0;
     gd.gunHitSequence[i] = 0;
     gd.fireIntent[i] = 0;
-    gd.botThink[i] = i === 1 ? 0.45 : 0;
+    gd.botThink[i] = i === 1 ? difficulty.openingThink[gd.difficulty] : 0;
     gd.rematchReady[i] = 0;
     gd.replicaTargetX[i] = gd.gunX[i];
     gd.replicaTargetY[i] = gd.gunY[i];
@@ -115,15 +116,19 @@ function updateTimers(gd, b, dt) {
 
 function updateBot(gd, b, dt) {
   const bot = 1;
+  const leadTime = difficulty.leadTime[gd.difficulty];
+  const aimTolerance = difficulty.aimTolerance[gd.difficulty];
+  const thinkMin = difficulty.thinkMin[gd.difficulty];
+  const thinkRange = difficulty.thinkRange[gd.difficulty];
   gd.botThink[bot] -= dt;
   if (gd.botThink[bot] <= 0 && gd.gunAmmo[bot] > 0) {
-    const targetX = gd.gunX[0] + gd.gunVX[0] * b.botLeadTime;
-    const targetY = gd.gunY[0] + gd.gunVY[0] * b.botLeadTime;
+    const targetX = gd.gunX[0] + gd.gunVX[0] * leadTime;
+    const targetY = gd.gunY[0] + gd.gunVY[0] * leadTime;
     const desired = Math.atan2(targetY - gd.gunY[bot], targetX - gd.gunX[bot]);
     const delta = signedAngleDifference(gd.gunAngle[bot], desired);
-    if (Math.abs(delta) <= b.botAimTolerance) {
+    if (Math.abs(delta) <= aimTolerance) {
       gd.fireIntent[bot] = 1;
-      gd.botThink[bot] = b.botThinkMin + nextRandom(gd) * b.botThinkRange;
+      gd.botThink[bot] = thinkMin + nextRandom(gd) * thinkRange;
     }
   }
 }

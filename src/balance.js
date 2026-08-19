@@ -13,6 +13,23 @@ export const MODE = Object.freeze({
   LOCAL: 3,
 });
 
+export const DIFFICULTY = Object.freeze({ EASY: 0, NORMAL: 1, HARD: 2 });
+
+export const difficulty = Object.freeze({
+  count: 3,
+  name: ['EASY', 'NORMAL', 'HARD'],
+  blurb: [
+    'Sloppy aim • ignores your drift',
+    'A fair duel • leads your shots',
+    'Tight aim • fires the instant it can',
+  ],
+  aimTolerance: Float32Array.of(0.17, 0.105, 0.05),
+  thinkMin: Float32Array.of(0.55, 0.22, 0.1),
+  thinkRange: Float32Array.of(0.55, 0.32, 0.14),
+  leadTime: Float32Array.of(0, 0.12, 0.2),
+  openingThink: Float32Array.of(1.1, 0.45, 0.2),
+});
+
 export const balance = Object.freeze({
   gameWidth: 1080,
   gameHeight: 1920,
@@ -44,10 +61,6 @@ export const balance = Object.freeze({
   countdownTime: 2.7,
   fixedStep: 1 / 120,
   maxSubSteps: 5,
-  botAimTolerance: 0.105,
-  botThinkMin: 0.22,
-  botThinkRange: 0.32,
-  botLeadTime: 0.12,
   snapshotInterval: 1 / 24,
 });
 
@@ -58,5 +71,8 @@ export function validateBalance(b) {
   if (b.hitsToWin < 1) errors.push('hitsToWin must be positive');
   if (b.maxBullets < b.magazineSize * 2) errors.push('maxBullets is too small');
   if (b.arenaSize <= b.gunRadius * 4) errors.push('arena is too small');
+  for (const key of ['name', 'blurb', 'aimTolerance', 'thinkMin', 'thinkRange', 'leadTime', 'openingThink']) {
+    if (difficulty[key].length !== difficulty.count) errors.push(`difficulty.${key} must have length difficulty.count`);
+  }
   if (errors.length) throw new Error(`Invalid balance:\n${errors.join('\n')}`);
 }

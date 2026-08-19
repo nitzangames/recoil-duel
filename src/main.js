@@ -1,15 +1,37 @@
-import { balance, MODE, PHASE, validateBalance } from './balance.js';
+import { balance, difficulty, DIFFICULTY, MODE, PHASE, validateBalance } from './balance.js';
 import { allocateGameData } from './game-data.js';
 import * as Logic from './logic.js';
 import {
   createBoard, playFeedback, renderBoard, resumeBoardAudio, SCREEN,
-  setBoardScreen, showToast, suspendBoardAudio, updateBoard,
+  setBoardDifficulty, setBoardScreen, showToast, suspendBoardAudio, updateBoard,
 } from './board.js';
 import { attachPlatformNet, createSnapshotPacket, fillSnapshotPacket } from './net.js';
 
+const DIFFICULTY_KEY = 'recoilDuelDifficulty';
+
+function loadDifficulty() {
+  try {
+    const parsed = Number.parseInt(localStorage.getItem(DIFFICULTY_KEY), 10);
+    if (Number.isInteger(parsed) && parsed >= 0 && parsed < difficulty.count) return parsed;
+  } catch (_error) {
+    // Play SDK sandbox may block storage access.
+  }
+  return DIFFICULTY.NORMAL;
+}
+
+function saveDifficulty(diff) {
+  try {
+    localStorage.setItem(DIFFICULTY_KEY, String(diff));
+  } catch (_error) {
+    // Play SDK sandbox may block storage access.
+  }
+}
+
+let currentDifficulty = loadDifficulty();
+
 validateBalance(balance);
 const gd = allocateGameData(balance);
-Logic.startMatch(gd, balance, MODE.BOT, 0);
+Logic.startMatch(gd, balance, MODE.BOT, 0, currentDifficulty);
 
 let board;
 let net = null;
@@ -22,14 +44,28 @@ function resetHudCache() {
   board.cachedAmmo[1] = -1;
   board.cachedHits[0] = -1;
   board.cachedHits[1] = -1;
+  board.cachedTitleMode = -1;
 }
 
-function startBot() {
+function startBot(diff) {
+  const explicitDiff = diff !== undefined;
+  if (!explicitDiff) diff = currentDifficulty;
+  currentDifficulty = diff;
+  if (explicitDiff) saveDifficulty(diff);
   leaveNetwork(false);
   gd.localPlayer = 0;
-  Logic.startMatch(gd, balance, MODE.BOT);
+  Logic.startMatch(gd, balance, MODE.BOT, undefined, diff);
   resetHudCache();
+  setBoardDifficulty(board, diff);
   setBoardScreen(board, SCREEN.MATCH, MODE.BOT, 0);
+}
+
+function openDifficulty() {
+  setBoardScreen(board, SCREEN.DIFFICULTY);
+}
+
+function exitToMenu() {
+  setBoardScreen(board, SCREEN.MENU);
 }
 
 function startLocal() {
@@ -146,6 +182,8 @@ const actions = {
   startBot,
   startLocal,
   startOnline,
+  openDifficulty,
+  exitToMenu,
   fire,
   rematch,
   exitMatch,
@@ -153,6 +191,7 @@ const actions = {
 };
 
 board = createBoard(document.getElementById('game'), balance, actions);
+setBoardDifficulty(board, currentDifficulty);
 
 const SDK = window.PlaySDK;
 SDK?.multiplayer?.on?.('disconnected', () => {
