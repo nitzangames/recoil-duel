@@ -1,10 +1,11 @@
-import { PHASE } from './balance.js';
+import { DIFFICULTY, PHASE } from './balance.js';
 
 export function allocateGameData(b, seed = 0x71c9a31d) {
   const gd = {
     phase: PHASE.COUNTDOWN,
     winner: -1,
     mode: 0,
+    difficulty: DIFFICULTY.NORMAL,
     time: 0,
     accumulator: 0,
     countdown: b.countdownTime,
