@@ -12,3 +12,5 @@ thumbnail-options.svg
 thumbnail-options.png
 thumbnail.svg
 *.log
+docs/*
+docs/**
