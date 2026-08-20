@@ -1,4 +1,5 @@
 import { difficulty, DIFFICULTY, MODE, PHASE, TAU } from './balance.js';
+import { allocateParticles, resetParticles, spawnParticleBurst, updateParticles } from './particles.js';
 
 export const SCREEN = Object.freeze({ MENU: 0, DIFFICULTY: 1, MATCH: 2 });
 
@@ -24,6 +25,8 @@ export function createBoard(canvas, b, actions) {
     cachedAmmo: [-1, -1], cachedHits: [-1, -1],
     ammoText: ['', ''], scoreText: ['', ''],
     titleText: ['', ''], cachedTitleMode: -1, cachedTitleLocalPlayer: -1, cachedTitleDifficulty: -1,
+    particles: allocateParticles(b), deathBurstDone: new Uint8Array(b.gunCount),
+    lastRoundId: -1, endCardClock: 0,
     menuGradient: ctx.createLinearGradient(0, 0, 1080, 1920),
     arenaGradient: ctx.createLinearGradient(70, 430, 1010, 1370),
     fireGradient: ctx.createRadialGradient(500, 1580, 10, 540, 1640, 180),
@@ -62,6 +65,7 @@ export function createBoard(canvas, b, actions) {
     } else if (x < 190 && y < 190) {
       actions.exitMatch();
     } else if (actions.isGameOver()) {
+      if (board.endCardClock < b.endCardDelay) return;
       if (x >= 155 && x <= 925 && y >= 1510 && y <= 1655) actions.rematch();
       else if (x >= 155 && x <= 925 && y >= 1680 && y <= 1815) actions.exitMatch();
     } else {
@@ -92,12 +96,26 @@ export function showToast(board, message, seconds = 2.4) {
   board.toastTime = seconds;
 }
 
-export function updateBoard(board, dt) {
+export function updateBoard(board, dt, gd, b) {
   if (board.toastTime > 0) {
     board.toastTime -= dt;
     if (board.toastTime <= 0) board.toast = '';
   }
   if (board.wallSoundClock > 0) board.wallSoundClock -= dt;
+
+  if (gd.roundId !== board.lastRoundId) {
+    board.lastRoundId = gd.roundId;
+    resetParticles(board.particles, b);
+    board.deathBurstDone[0] = 0;
+    board.deathBurstDone[1] = 0;
+  }
+  updateParticles(board.particles, b, dt);
+
+  if (gd.phase === PHASE.OVER) {
+    if (board.endCardClock < b.endCardDelay) board.endCardClock += dt;
+  } else {
+    board.endCardClock = 0;
+  }
 }
 
 function roundedRect(ctx, x, y, w, h, r) {
@@ -211,6 +229,34 @@ function drawGun(ctx, x, y, angle, color, dark, flash, hitFlash, scale = 1) {
     ctx.beginPath(); ctx.arc(141, 0, 12, 0, TAU); ctx.fill();
   }
   ctx.restore();
+}
+
+function drawHeart(ctx, x, y, size, filled, color) {
+  const top = y - size / 2;
+  const curveHeight = size * 0.3;
+  const half = size / 2;
+  const midY = top + (size + curveHeight) / 2;
+  ctx.beginPath();
+  ctx.moveTo(x, top + curveHeight);
+  ctx.bezierCurveTo(x, top, x - half, top, x - half, top + curveHeight);
+  ctx.bezierCurveTo(x - half, midY, x, midY, x, top + size);
+  ctx.bezierCurveTo(x, midY, x + half, midY, x + half, top + curveHeight);
+  ctx.bezierCurveTo(x + half, top, x, top, x, top + curveHeight);
+  ctx.closePath();
+  if (filled) {
+    ctx.fillStyle = color;
+    ctx.fill();
+  } else {
+    ctx.strokeStyle = 'rgba(255,255,255,.22)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+function drawHeartsRow(ctx, startX, y, spacing, size, filledCount, total, color) {
+  for (let i = 0; i < total; i++) {
+    drawHeart(ctx, startX + i * spacing, y, size, i < filledCount, color);
+  }
 }
 
 function drawButton(ctx, x, y, w, h, fill, label, sublabel = '') {
@@ -335,7 +381,8 @@ function updateHudCache(board, gd, b) {
     }
     if (board.cachedHits[i] !== gd.gunHits[i]) {
       board.cachedHits[i] = gd.gunHits[i];
-      board.scoreText[i] = `${gd.gunHits[i]} / ${b.hitsToWin} DAMAGE`;
+      const lives = b.hitsToWin - gd.gunHits[i];
+      board.scoreText[i] = lives === 0 ? 'ELIMINATED' : lives === 1 ? 'LAST LIFE' : `${lives} LIVES`;
     }
   }
 }
@@ -360,10 +407,7 @@ function drawPlayerHud(board, gd, b, index, x) {
   ctx.fillText(board.scoreText[index], x + 25, 270);
   ctx.globalAlpha = 1;
 
-  for (let hit = 0; hit < b.hitsToWin; hit++) {
-    ctx.fillStyle = hit < gd.gunHits[index] ? COLOR.gold : 'rgba(255,255,255,.2)';
-    ctx.beginPath(); ctx.arc(x + 250 + hit * 44, 244, 15, 0, TAU); ctx.fill();
-  }
+  drawHeartsRow(ctx, x + 250, 244, 44, 30, b.hitsToWin - gd.gunHits[index], b.hitsToWin, color);
   for (let ammo = 0; ammo < b.magazineSize; ammo++) {
     ctx.fillStyle = ammo < gd.gunAmmo[index] ? COLOR.white : 'rgba(255,255,255,.18)';
     roundedRect(ctx, x + 25 + ammo * 34, 305, 23, 10, 5); ctx.fill();
@@ -402,6 +446,27 @@ function drawArena(board, gd, b) {
   ctx.beginPath(); ctx.moveTo(540, b.arenaTop + 30); ctx.lineTo(540, b.arenaTop + b.arenaSize - 30); ctx.stroke();
   ctx.setLineDash([]);
 
+  for (let i = 0; i < b.gunCount; i++) {
+    if (gd.gunHits[i] >= b.hitsToWin) continue;
+    drawGun(ctx, gd.gunX[i], gd.gunY[i], gd.gunAngle[i], PLAYER_COLOR[i], PLAYER_DARK[i], gd.gunMuzzleFlash[i], gd.gunHitFlash[i]);
+    ctx.fillStyle = COLOR.ink;
+    roundedRect(ctx, gd.gunX[i] - 50, gd.gunY[i] + 73, 100, 30, 15); ctx.fill();
+    ctx.fillStyle = COLOR.white;
+    ctx.font = '900 17px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(playerTitle(board, i, false), gd.gunX[i], gd.gunY[i] + 88);
+
+    const heartY = Math.max(gd.gunY[i] - 85, b.arenaTop + 20);
+    drawHeartsRow(ctx, gd.gunX[i] - (b.hitsToWin - 1) * 13, heartY, 26, 20, b.hitsToWin - gd.gunHits[i], b.hitsToWin, PLAYER_COLOR[i]);
+  }
+
+  for (let liveIndex = 0; liveIndex < board.particles.liveCount; liveIndex++) {
+    const slot = board.particles.live[liveIndex];
+    ctx.globalAlpha = board.particles.life[slot] / board.particles.lifeMax[slot];
+    ctx.fillStyle = PLAYER_COLOR[board.particles.owner[slot]];
+    ctx.beginPath(); ctx.arc(board.particles.x[slot], board.particles.y[slot], board.particles.size[slot], 0, TAU); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
   for (let i = 0; i < gd.bulletCount; i++) {
     const slot = gd.bulletLive[i];
     const owner = gd.bulletOwner[slot];
@@ -409,15 +474,6 @@ function drawArena(board, gd, b) {
     ctx.fillStyle = COLOR.white;
     ctx.beginPath(); ctx.arc(gd.bulletX[slot], gd.bulletY[slot], b.bulletRadius, 0, TAU); ctx.fill();
     ctx.shadowColor = 'transparent';
-  }
-
-  for (let i = 0; i < b.gunCount; i++) {
-    drawGun(ctx, gd.gunX[i], gd.gunY[i], gd.gunAngle[i], PLAYER_COLOR[i], PLAYER_DARK[i], gd.gunMuzzleFlash[i], gd.gunHitFlash[i]);
-    ctx.fillStyle = COLOR.ink;
-    roundedRect(ctx, gd.gunX[i] - 50, gd.gunY[i] + 73, 100, 30, 15); ctx.fill();
-    ctx.fillStyle = COLOR.white;
-    ctx.font = '900 17px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(playerTitle(board, i, false), gd.gunX[i], gd.gunY[i] + 88);
   }
   ctx.restore();
 }
@@ -528,7 +584,7 @@ function drawMatch(board, gd, b) {
   drawCountdown(ctx, gd);
   if (board.mode === MODE.LOCAL) drawLocalControls(board, gd, b);
   else drawFireControl(board, gd, b);
-  if (gd.phase === PHASE.OVER) drawEnd(board, gd);
+  if (gd.phase === PHASE.OVER && board.endCardClock >= b.endCardDelay) drawEnd(board, gd);
   drawToast(board);
 }
 
@@ -570,7 +626,7 @@ function tone(board, frequency, endFrequency, duration, volume, wave) {
   oscillator.start(now); oscillator.stop(now + duration);
 }
 
-export function playFeedback(board, gd) {
+export function playFeedback(board, gd, b) {
   if (gd.shotEventMask) {
     tone(board, 170, 58, 0.13, 0.22, 'sawtooth');
     window.PlaySDK?.haptic?.('medium');
@@ -579,6 +635,16 @@ export function playFeedback(board, gd) {
     tone(board, 92, 35, 0.28, 0.35, 'square');
     tone(board, 520, 120, 0.18, 0.11, 'sawtooth');
     window.PlaySDK?.haptic?.('heavy');
+    for (let i = 0; i < b.gunCount; i++) {
+      if (!(gd.hitEventMask & (1 << i))) continue;
+      if (gd.gunHits[i] >= b.hitsToWin) {
+        if (board.deathBurstDone[i]) continue;
+        board.deathBurstDone[i] = 1;
+        spawnParticleBurst(board.particles, b, gd.gunX[i], gd.gunY[i], i, b.deathParticleCount, b.deathParticleSpeedMin, b.deathParticleSpeedRange);
+      } else {
+        spawnParticleBurst(board.particles, b, gd.gunX[i], gd.gunY[i], i, b.hitParticleCount, b.hitParticleSpeedMin, b.hitParticleSpeedRange);
+      }
+    }
   }
   if (gd.reloadEventMask) tone(board, 520, 880, 0.11, 0.08, 'sine');
   if (gd.wallEventCount && board.wallSoundClock <= 0) {
