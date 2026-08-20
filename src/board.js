@@ -12,6 +12,9 @@ const COLOR = Object.freeze({
 const PLAYER_COLOR = [COLOR.blue, COLOR.coral];
 const PLAYER_DARK = [COLOR.blueDark, COLOR.coralDark];
 const LOCAL_WIN_TEXT = ['P1 WINS!', 'P2 WINS!'];
+const ARENA_DIVIDER_DASH = Object.freeze([16, 18]);
+const LOCAL_DIVIDER_DASH = Object.freeze([12, 14]);
+const LINE_DASH_NONE = Object.freeze([]);
 const DIFFICULTY_BUTTON_FILL = [COLOR.blueDark, '#7b4bb7', COLOR.coralDark];
 const DIFFICULTY_BUTTON_TOPS = [1170, 1330, 1490];
 
@@ -231,7 +234,7 @@ function drawGun(ctx, x, y, angle, color, dark, flash, hitFlash, scale = 1) {
   ctx.restore();
 }
 
-function drawHeart(ctx, x, y, size, filled, color) {
+function drawHeart(ctx, x, y, size, filled, color, emptyStroke) {
   const top = y - size / 2;
   const curveHeight = size * 0.3;
   const half = size / 2;
@@ -247,15 +250,15 @@ function drawHeart(ctx, x, y, size, filled, color) {
     ctx.fillStyle = color;
     ctx.fill();
   } else {
-    ctx.strokeStyle = 'rgba(255,255,255,.22)';
+    ctx.strokeStyle = emptyStroke;
     ctx.lineWidth = 2;
     ctx.stroke();
   }
 }
 
-function drawHeartsRow(ctx, startX, y, spacing, size, filledCount, total, color) {
+function drawHeartsRow(ctx, startX, y, spacing, size, filledCount, total, color, emptyStroke) {
   for (let i = 0; i < total; i++) {
-    drawHeart(ctx, startX + i * spacing, y, size, i < filledCount, color);
+    drawHeart(ctx, startX + i * spacing, y, size, i < filledCount, color, emptyStroke);
   }
 }
 
@@ -407,7 +410,7 @@ function drawPlayerHud(board, gd, b, index, x) {
   ctx.fillText(board.scoreText[index], x + 25, 270);
   ctx.globalAlpha = 1;
 
-  drawHeartsRow(ctx, x + 250, 244, 44, 30, b.hitsToWin - gd.gunHits[index], b.hitsToWin, color);
+  drawHeartsRow(ctx, x + 250, 244, 44, 30, b.hitsToWin - gd.gunHits[index], b.hitsToWin, COLOR.white, 'rgba(255,255,255,.22)');
   for (let ammo = 0; ammo < b.magazineSize; ammo++) {
     ctx.fillStyle = ammo < gd.gunAmmo[index] ? COLOR.white : 'rgba(255,255,255,.18)';
     roundedRect(ctx, x + 25 + ammo * 34, 305, 23, 10, 5); ctx.fill();
@@ -442,9 +445,9 @@ function drawArena(board, gd, b) {
     ctx.beginPath(); ctx.moveTo(p, b.arenaTop); ctx.lineTo(p, b.arenaTop + b.arenaSize); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(b.arenaLeft, b.arenaTop + v * b.arenaSize / 6); ctx.lineTo(b.arenaLeft + b.arenaSize, b.arenaTop + v * b.arenaSize / 6); ctx.stroke();
   }
-  ctx.strokeStyle = 'rgba(16,23,29,.18)'; ctx.lineWidth = 4; ctx.setLineDash([16, 18]);
+  ctx.strokeStyle = 'rgba(16,23,29,.18)'; ctx.lineWidth = 4; ctx.setLineDash(ARENA_DIVIDER_DASH);
   ctx.beginPath(); ctx.moveTo(540, b.arenaTop + 30); ctx.lineTo(540, b.arenaTop + b.arenaSize - 30); ctx.stroke();
-  ctx.setLineDash([]);
+  ctx.setLineDash(LINE_DASH_NONE);
 
   for (let i = 0; i < b.gunCount; i++) {
     if (gd.gunHits[i] >= b.hitsToWin) continue;
@@ -456,9 +459,12 @@ function drawArena(board, gd, b) {
     ctx.fillText(playerTitle(board, i, false), gd.gunX[i], gd.gunY[i] + 88);
 
     const heartY = Math.max(gd.gunY[i] - 85, b.arenaTop + 20);
-    drawHeartsRow(ctx, gd.gunX[i] - (b.hitsToWin - 1) * 13, heartY, 26, 20, b.hitsToWin - gd.gunHits[i], b.hitsToWin, PLAYER_COLOR[i]);
+    drawHeartsRow(ctx, gd.gunX[i] - (b.hitsToWin - 1) * 13, heartY, 26, 20, b.hitsToWin - gd.gunHits[i], b.hitsToWin, PLAYER_COLOR[i], 'rgba(16,23,29,.28)');
   }
 
+  ctx.save();
+  roundedRect(ctx, b.arenaLeft, b.arenaTop, b.arenaSize, b.arenaSize, 18);
+  ctx.clip();
   for (let liveIndex = 0; liveIndex < board.particles.liveCount; liveIndex++) {
     const slot = board.particles.live[liveIndex];
     ctx.globalAlpha = board.particles.life[slot] / board.particles.lifeMax[slot];
@@ -466,6 +472,7 @@ function drawArena(board, gd, b) {
     ctx.beginPath(); ctx.arc(board.particles.x[slot], board.particles.y[slot], board.particles.size[slot], 0, TAU); ctx.fill();
   }
   ctx.globalAlpha = 1;
+  ctx.restore();
 
   for (let i = 0; i < gd.bulletCount; i++) {
     const slot = gd.bulletLive[i];
@@ -537,9 +544,9 @@ function drawLocalControls(board, gd, b) {
   ctx.font = '900 25px system-ui, sans-serif';
   ctx.fillText(bottomReloading ? 'P1 • RELOADING' : 'P1 • TAP BOTTOM HALF TO FIRE', 540, 1467);
 
-  ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 4; ctx.setLineDash([12, 14]);
+  ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 4; ctx.setLineDash(LOCAL_DIVIDER_DASH);
   ctx.beginPath(); ctx.moveTo(24, b.gameHeight * 0.5); ctx.lineTo(1056, b.gameHeight * 0.5); ctx.stroke();
-  ctx.setLineDash([]);
+  ctx.setLineDash(LINE_DASH_NONE);
 
   ctx.fillStyle = COLOR.muted; ctx.font = '700 22px system-ui, sans-serif';
   ctx.fillText('MULTI-TOUCH ENABLED • FIRST TO 3 HITS', 540, 1760);
