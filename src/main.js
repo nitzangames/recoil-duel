@@ -95,7 +95,7 @@ function attachOnlineGame() {
     activeNet.handlers.state = (packet) => {
       if (net === activeNet && gd.mode === MODE.ONLINE_GUEST) {
         Logic.applySnapshot(gd, balance, packet);
-        playFeedback(board, gd);
+        playFeedback(board, gd, balance);
       }
     };
     activeNet.handlers.rematch = () => {
@@ -134,7 +134,7 @@ function fire(playerIndex = gd.localPlayer) {
   if (gd.mode === MODE.ONLINE_GUEST) {
     Logic.applyReplicaShotFeedback(gd, gd.localPlayer, balance);
     gd.shotEventMask = 1 << gd.localPlayer;
-    playFeedback(board, gd);
+    playFeedback(board, gd, balance);
     net?.sendFire();
   } else {
     Logic.queueFire(gd, playerIndex);
@@ -211,12 +211,12 @@ SDK?.multiplayer?.on?.('playerLeft', () => {
 function frame(now) {
   const dt = Math.min((now - lastTime) / 1000, 1 / 30);
   lastTime = now;
-  updateBoard(board, dt);
+  updateBoard(board, dt, gd, balance);
 
   if (board.screen === SCREEN.MATCH) {
     if (gd.mode === MODE.ONLINE_GUEST) Logic.tickReplica(gd, balance, dt);
     else Logic.tick(gd, balance, dt);
-    playFeedback(board, gd);
+    playFeedback(board, gd, balance);
 
     if (gd.mode === MODE.ONLINE_HOST && net) {
       gd.snapshotClock += dt;
