@@ -62,6 +62,20 @@ export const balance = Object.freeze({
   fixedStep: 1 / 120,
   maxSubSteps: 5,
   snapshotInterval: 1 / 24,
+  maxParticles: 128,
+  deathParticleCount: 40,
+  hitParticleCount: 8,
+  particleLifeMin: 0.45,
+  particleLifeRange: 0.55,
+  deathParticleSpeedMin: 180,
+  deathParticleSpeedRange: 520,
+  hitParticleSpeedMin: 90,
+  hitParticleSpeedRange: 260,
+  particleDrag: 1.9,
+  particleSizeMin: 3,
+  particleSizeRange: 7,
+  particleGravity: 220,
+  endCardDelay: 0.7,
 });
 
 export function validateBalance(b) {
@@ -74,5 +88,9 @@ export function validateBalance(b) {
   for (const key of ['name', 'blurb', 'aimTolerance', 'thinkMin', 'thinkRange', 'leadTime', 'openingThink']) {
     if (difficulty[key].length !== difficulty.count) errors.push(`difficulty.${key} must have length difficulty.count`);
   }
+  if (b.maxParticles < b.deathParticleCount * 2) errors.push('maxParticles is too small');
+  if (b.deathParticleCount < 1) errors.push('deathParticleCount must be positive');
+  if (b.hitParticleCount < 1) errors.push('hitParticleCount must be positive');
+  if (b.particleLifeMin <= 0) errors.push('particleLifeMin must be positive');
   if (errors.length) throw new Error(`Invalid balance:\n${errors.join('\n')}`);
 }
